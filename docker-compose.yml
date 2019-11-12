@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  "bucai-lattice":
+    image: lattice
+    restart: always
+    networks:
+      - bucai-network
+
+networks:
+  bucai-network:
+    external: true

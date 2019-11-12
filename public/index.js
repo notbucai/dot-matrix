@@ -6,123 +6,89 @@ const ctx = canvas.getContext('2d');
 const cv_w = canvas.width;
 const cv_h = canvas.height;
 
-const map = [];
 const size = 20;
 
-const moveObj = {
-  x: 0,
-  y: 0,
-  /** @type {HTMLCanvasElement} */
-  canvas: canvas,
-  init(x, y) {
-    this.x = x;
-    this.y = y;
+/**
+ * 双击
+ */
+const moveObj = new Move(canvas);
+
+const ctxAction = new CtxAction(ctx, size);
+
+const socket = new Socket(function (dot) {
+  ctxAction.draw(...dot);
+});
+
+/**
+ * 耦合性太高 
+ */
+const eventlist = {
+  dbclickStatus: false,
+  click_timer: null,
+
+  updateEvent(event) {
+    moveObj.update(event.offsetX, event.offsetY);
   },
-  update(c_x, c_y) {
-    // 得到开始的位置
-    const { x, y } = this;
-    // 得到移动后的位置 c_x,c_y
-    // 获取当前canvas元素位置
-    const { offsetLeft, offsetTop } = this.canvas;
-    // 得到移动距离
-    const mx = c_x - x;
-    const my = c_y - y;
-    // 当前位置加移动距离 得到 目标位置
-    const ml = (offsetLeft + mx);
-    const mt = (offsetTop + my);
-    // 边界判断
-    this.canvas.style.left = ml >= 0 ? 0 : Math.abs(ml) + 900 >= cv_w ? (cv_w - 900) : ml + 'px';
-    this.canvas.style.top = mt >= 0 ? 0 : Math.abs(mt) + 450 >= cv_h ? (cv_h - 450) : mt + 'px';
+  mouseupEvent() {
+    main.removeEventListener('mousemove', eventlist.updateEvent);
+    document.removeEventListener('mouseup', eventlist.mouseupEvent);
+  },
+  mousedownEvent(event) {
+    if (event.button === 0) {
+      moveObj.init(event.offsetX, event.offsetY);
+      main.addEventListener('mousemove', eventlist.updateEvent);
+    }
+    document.addEventListener('mouseup', eventlist.mouseupEvent);
+  },
+  dblclickEvent(event) {
+    clearTimeout(eventlist.click_timer);
+    if (!eventlist.dbclickStatus) {
+      canvas.style.width = cv_w + 'px';
+      canvas.style.height = cv_h + 'px';
+      const { clientWidth, clientHeight } = main;
+      // 双击放大指定区域
+      canvas.style.left = -(event.offsetX * cv_w / clientWidth - event.offsetX) + 'px';
+      canvas.style.top = -(event.offsetY * cv_h / clientHeight - event.offsetY) + 'px';
 
-    // 再将移动后的位置保存
-    this.x = c_x;
-    this.y = c_y;
-  }
-}
+      main.addEventListener('mousedown', eventlist.mousedownEvent);
+    } else {
+      canvas.style.left = 0;
+      canvas.style.top = 0;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
 
-function updateEvent(event) {
-
-  moveObj.update(event.offsetX, event.offsetY);
-}
-
-function mouseupEvent() {
-  main.removeEventListener('mousemove', updateEvent);
-  document.removeEventListener('mouseup', mouseupEvent);
-}
-
-function mousedownEvent(event) {
-
-  if (event.button === 0) {
-    moveObj.init(event.offsetX, event.offsetY);
-    main.addEventListener('mousemove', updateEvent);
-
-  }
-  document.addEventListener('mouseup', mouseupEvent);
-}
-function dblclickEvent(event) {
-  clearTimeout(canvas.click_timer);
-
-  if (!dblclickEvent.dbclickStatus) {
-
-    canvas.style.width = cv_w + 'px';
-    canvas.style.height = cv_h + 'px';
+      main.removeEventListener('mousedown', eventlist.mousedownEvent);
+    }
+    eventlist.dbclickStatus = !eventlist.dbclickStatus;
+  },
+  clickEvent(event) {
+    clearTimeout(eventlist.click_timer);
     const { clientWidth, clientHeight } = main;
-    // 双击放大指定区域
-    canvas.style.left = -(event.offsetX * cv_w / clientWidth - event.offsetX) + 'px';
-    canvas.style.top = -(event.offsetY * cv_h / clientHeight - event.offsetY) + 'px';
+    const { offsetX, offsetY } = event;
+    const c_width = parseInt(getComputedStyle(canvas).width);
+    const c_height = parseInt(getComputedStyle(canvas).height);
+    console.log(c_height, c_width);
 
-    main.addEventListener('mousedown', mousedownEvent);
-  } else {
-    canvas.style.left = 0;
-    canvas.style.top = 0;
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    main.removeEventListener('mousedown', mousedownEvent);
+    const c_x = c_width >= cv_w ? offsetX : offsetX * cv_w / clientWidth - 5;
+    const c_y = c_height >= cv_h ? offsetY : offsetY * cv_h / clientHeight - 5;
+
+    eventlist.click_timer = setTimeout(() => {
+      const dot = ctxAction.draw(Math.floor(c_x / size), Math.floor(c_y / size));
+      socket.dot(dot);
+    }, 0);
   }
-  dblclickEvent.dbclickStatus = !dblclickEvent.dbclickStatus;
 }
 
-function clickEvent(event) {
-  clearTimeout(canvas.click_timer);
-  const { clientWidth, clientHeight } = main;
-  const { offsetX, offsetY } = event;
-  const c_width = parseInt(getComputedStyle(canvas).width);
-  const c_height = parseInt(getComputedStyle(canvas).height);
-  console.log(c_height, c_width);
 
-  const c_x = c_width >= cv_w ? offsetX : offsetX * cv_w / clientWidth - 5;
-  const c_y = c_height >= cv_h ? offsetY : offsetY * cv_h / clientHeight - 5;
-
-  canvas.click_timer = setTimeout(() => {
-    canvasActions.draw(c_x, c_y);
-  }, 0);
-
-}
-
-const canvasActions = {
-  /** @type {CanvasRenderingContext2D} */
-  ctx: ctx,
-  colorIndex: 2,
-  colors: ['#000', '#fff', "#f44336", "#e91e63", "#9c27b0", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#9e9e9e", '#607d8b'],
-  draw(x, y) {
-    this.ctx.fillStyle = this.colors[this.colorIndex];
-    const _x = Math.floor(x / size) * size;
-    const _y = Math.floor(y / size) * size;
-
-    this.ctx.fillRect(_x, _y, size, size);
-
-    map.push([Math.floor(x / size), Math.floor(y / size), (Math.random() * size) | 0]);
-  },
-};
-
+// 初始化 颜色操作栏
 function initColors() {
-  const nodes = canvasActions.colors.map((item, index) => {
+  const nodes = ctxAction.colors.map((item, index) => {
     const linode = document.createElement('li');
     linode.dataset.index = index;
     linode.style.backgroundColor = item;
     linode.addEventListener('click', function ({ target }) {
 
-      canvasActions.colorIndex = target.dataset.index;
+      ctxAction.colorIndex = parseInt(target.dataset.index);
       nodes.forEach(item => {
         item.classList.remove('active')
       });
@@ -136,8 +102,25 @@ function initColors() {
   document.getElementById('action').append(...nodes);
 }
 
+function initCanvas() {
+  const xhr = new XMLHttpRequest();
+  xhr.addEventListener('readystatechange', function (event) {
+    if (this.readyState === 4) {
+      const map = JSON.parse(xhr.responseText);
+      map.forEach(dot => {
+        if (Array.isArray(dot) && !Number.isNaN(parseInt(JSON.stringify(dot).replace(/\[|\]|,/g, '')))) {
+          ctxAction.draw(...dot);
+        }
+      });
+    }
+  });
+  xhr.open('GET', '/api');
+  xhr.send();
+}
+
 ; (function init() {
   initColors();
-  main.addEventListener('dblclick', dblclickEvent);
-  canvas.addEventListener('click', clickEvent);
+  initCanvas();
+  main.addEventListener('dblclick', eventlist.dblclickEvent);
+  canvas.addEventListener('click', eventlist.clickEvent);
 })();
