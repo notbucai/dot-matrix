@@ -65,10 +65,6 @@ const eventlist = {
     eventlist.dbclickStatus = !eventlist.dbclickStatus;
   },
   clickEvent(event) {
-    if (eventlist.isMover) {
-      eventlist.isMover = false;
-      return;
-    }
     clearTimeout(eventlist.click_timer);
     const { clientWidth, clientHeight } = main;
     const { offsetX, offsetY } = event;
