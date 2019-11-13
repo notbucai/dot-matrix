@@ -25,13 +25,16 @@ const socket = new Socket(function (dot) {
 const eventlist = {
   dbclickStatus: false,
   click_timer: null,
-
+  isMover: false,
   updateEvent(event) {
-    moveObj.update(event.offsetX, event.offsetY);
+    moveObj.update(event.layerX, event.layerY);
+    event.stopPropagation();
+    event.preventDefault();
   },
   mouseupEvent() {
     main.removeEventListener('mousemove', eventlist.updateEvent);
     document.removeEventListener('mouseup', eventlist.mouseupEvent);
+    eventlist.isMover = true;
   },
   mousedownEvent(event) {
     if (event.button === 0) {
@@ -62,6 +65,10 @@ const eventlist = {
     eventlist.dbclickStatus = !eventlist.dbclickStatus;
   },
   clickEvent(event) {
+    if (eventlist.isMover) {
+      eventlist.isMover = false;
+      return;
+    }
     clearTimeout(eventlist.click_timer);
     const { clientWidth, clientHeight } = main;
     const { offsetX, offsetY } = event;
