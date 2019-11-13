@@ -123,4 +123,21 @@ function initCanvas() {
   initCanvas();
   main.addEventListener('dblclick', eventlist.dblclickEvent);
   canvas.addEventListener('click', eventlist.clickEvent);
+
+  // for (let i = 0; i < map.length; i++) {
+  //   const item = map[i];
+  //   const [y, x] = item;
+  //   // ctxAction.draw(x + 160, y + 20, (6));
+  //   end_map[0].push([x + 30, y + 50, (Math.random() * ctxAction.colors.length) | 0]);
+  // }
+
+  // console.log(JSON.stringify(end_map));
+
+  // end_map.forEach(charDot => {
+  //   charDot.forEach(([x, y, c]) => {
+  //     // ctxAction.draw(x, y, c);
+  //     // socket.dot([x, y, c]);
+  //   });
+  // });
+
 })();
