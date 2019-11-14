@@ -23,13 +23,28 @@ ContentSchema.statics.dotset = async function () {
 
   consola.info("content=>", content.length);
 
-  const endContent = content.filter((item, index) => {
-    return content.findIndex(([x, y]) => {
-      return x === item[0] && y === item[1];
-    }) === index;
-  });
+  let endContent = []
+  let obj = {}
+  // 现在的去重 牛逼
+  for (let dot of content) {
+    const key = dot[0] + '-' + dot[1];
+    if (!obj[key]) {
+      endContent.push(dot);
+      obj[key] = 1;
+    }
+  }
+  delete obj;
+
+  // 原来的去重 垃圾
+  // const endContent = content.filter((item, index) => {
+  //   return content.findIndex(([x, y]) => {
+  //     return x === item[0] && y === item[1];
+  //   }) === index;
+  // });
 
   consola.info("endContent=>", endContent.length);
+  // console.log('time=>', Date.now() - start);
+
   return endContent;
 }
 

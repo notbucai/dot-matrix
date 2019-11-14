@@ -18,7 +18,9 @@ app.use(static(path.join(__dirname, 'public')));
 app.use(router.routes()).use(router.allowedMethods());
 
 router.get('/api', async (ctx, next) => {
+  console.time();
   ctx.body = await Content.content();
+  console.timeEnd();
 });
 
 const server = http.createServer(app.callback());
