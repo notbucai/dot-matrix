@@ -1,11 +1,13 @@
 const mongoose = require('../mongodb/db');
 const consola = require('consola');
-
+const { duplicateRemoval, filter } = require('../utils/DataUtils')
 const version = 'v1';
 const ContentSchema = mongoose.Schema({
   name: {
     required: true,
-    type: String
+    type: String,
+    // unique: true,
+    index: true
   },
   content: Array
 });
@@ -19,32 +21,18 @@ ContentSchema.statics.content = async function (dot) {
 }
 ContentSchema.statics.dotset = async function () {
 
-  const content = ((await Content.findOne({ name: version })).content).reverse();
+  console.time("content");
+  const content = ((await Content.find({ name: version }))[0].content).reverse();
+  console.timeEnd("content");
 
   consola.info("content=>", content.length);
-
-  let endContent = []
-  let obj = {}
-  // 现在的去重 牛逼
-  for (let dot of content) {
-    const key = dot[0] + '-' + dot[1];
-    if (!obj[key]) {
-      endContent.push(dot);
-      obj[key] = 1;
-    }
-  }
-  delete obj;
-
-  // 原来的去重 垃圾
-  // const endContent = content.filter((item, index) => {
-  //   return content.findIndex(([x, y]) => {
-  //     return x === item[0] && y === item[1];
-  //   }) === index;
-  // });
-
+  const obj = duplicateRemoval(content);
+  const endContent = obj.content || filter(obj.myMap, obj.content);
   consola.info("endContent=>", endContent.length);
   // console.log('time=>', Date.now() - start);
-
+  // 简单的清空一下内存
+  obj.myMap = null;
+  obj.content = null;
   return endContent;
 }
 
