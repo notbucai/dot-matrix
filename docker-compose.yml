@@ -3,6 +3,7 @@ version: "3.7"
 services:
   "bucai-lattice":
     image: lattice
+    build: .
     restart: always
     networks:
       - bucai-network
