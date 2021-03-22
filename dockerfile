@@ -1,4 +1,4 @@
-FROM node:13.1.0-alpine
+FROM node:12.18.2
 
 LABEL maintainer="bucai<1450941858@qq.com>"
 
@@ -6,7 +6,7 @@ ADD . /app/
 
 WORKDIR /app
 
-RUN npm install
+RUN npm install --registry https://registry.npm.taobao.org
 
 EXPOSE 2293
 
