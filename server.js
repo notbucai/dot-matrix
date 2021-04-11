@@ -7,20 +7,38 @@ const Content = require('./model/Content');
 const consola = require('consola');
 const Socket = require('socket.io');
 const http = require('http');
+const render = require('koa-ejs');
 
 const app = new Koa();
 const router = new Router();
 const PROP = 2293;
-consola.info(path.join(__dirname, 'public'));
+const STATIC_PATH = path.join(__dirname, 'public');
+
+consola.info(STATIC_PATH);
 
 app.use(koaBody());
-app.use(static(path.join(__dirname, 'public')));
-app.use(router.routes()).use(router.allowedMethods());
 
+render(app, {
+  root: STATIC_PATH,
+  layout: 'template',
+  viewExt: 'html',
+  cache: false,
+  debug: true
+});
+
+app.use(router.routes()).use(router.allowedMethods());
+app.use(static(STATIC_PATH));
+
+router.get('/', async (ctx, next) => {
+  const points = await Content.content();
+  await ctx.render('content', {
+    points: JSON.stringify(points)
+  });
+});
 router.get('/api', async (ctx, next) => {
-  console.time();
+  console.time('api');
   ctx.body = await Content.content();
-  console.timeEnd();
+  console.timeEnd('api');
 });
 
 const server = http.createServer(app.callback());

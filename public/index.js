@@ -106,19 +106,11 @@ function initColors() {
 }
 
 function initCanvas() {
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener('readystatechange', function (event) {
-    if (this.readyState === 4) {
-      const map = JSON.parse(xhr.responseText);
-      map.forEach(dot => {
-        if (Array.isArray(dot) && !Number.isNaN(parseInt(JSON.stringify(dot).replace(/\[|\]|,/g, '')))) {
-          ctxAction.draw(...dot);
-        }
-      });
+  points.forEach(dot => {
+    if (Array.isArray(dot) && !Number.isNaN(parseInt(JSON.stringify(dot).replace(/\[|\]|,/g, '')))) {
+      ctxAction.draw(...dot);
     }
   });
-  xhr.open('GET', '/api');
-  xhr.send();
 }
 
 ; (function init() {

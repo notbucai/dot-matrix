@@ -8,9 +8,11 @@
     "consola": "^2.11.0",
     "koa": "^2.11.0",
     "koa-body": "^4.1.1",
+    "koa-ejs": "^4.3.0",
     "koa-logger": "^3.2.1",
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
+    "mongodb": "^3.6.6",
     "mongoose": "^5.7.9",
     "socket.io": "^2.3.0"
   },

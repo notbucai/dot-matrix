@@ -19,15 +19,21 @@ ContentSchema.statics.content = async function (dot) {
     return this.dotset();
   }
 }
+
 ContentSchema.statics.dotset = async function () {
 
-  console.time("content");
-  const content = ((await Content.find({ name: version }))[0].content).reverse();
-  console.timeEnd("content");
+  console.time("content find");
+  const item = await Content.findOne({ name: version }).lean(false);
+  const content = item.content.reverse();
+  console.timeEnd("content find");
 
   consola.info("content=>", content.length);
+  console.time('duplicateRemoval');
   const obj = duplicateRemoval(content);
+  console.timeEnd('duplicateRemoval');
+  console.time('filter');
   const endContent = obj.content || filter(obj.myMap, obj.content);
+  console.timeEnd('filter');
   consola.info("endContent=>", endContent.length);
   // console.log('time=>', Date.now() - start);
   // 简单的清空一下内存
@@ -42,7 +48,7 @@ module.exports = Content;
 
 (async () => {
   consola.info('Getting');
-  let data = await Content.findOne({ name: 'v1' });
+  let data = await Content.findOne({ name: version });
   if (!data) {
     const content = new Content({
       name: version,
