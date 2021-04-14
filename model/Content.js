@@ -1,6 +1,6 @@
 const mongoose = require('../mongodb/db');
 const consola = require('consola');
-const { duplicateRemoval, filter } = require('../utils/DataUtils')
+const { duplicateRemoval, filter, filterRubbish } = require('../utils/DataUtils')
 const version = 'v1';
 const ContentSchema = mongoose.Schema({
   name: {
@@ -35,11 +35,15 @@ ContentSchema.statics.dotset = async function () {
   const endContent = obj.content || filter(obj.myMap, obj.content);
   console.timeEnd('filter');
   consola.info("endContent=>", endContent.length);
+  console.time('filterRubbish');
+  const filterData = filterRubbish(endContent);
+  consola.info("filterData length=>", filterData.length);
+  console.timeEnd('filterRubbish');
   // console.log('time=>', Date.now() - start);
   // 简单的清空一下内存
   obj.myMap = null;
   obj.content = null;
-  return endContent;
+  return filterData;
 }
 
 const Content = mongoose.model('Content', ContentSchema);
