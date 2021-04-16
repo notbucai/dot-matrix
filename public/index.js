@@ -24,27 +24,43 @@ const socket = new Socket(function (dot) {
  */
 const eventlist = {
   dbclickStatus: false,
-  click_timer: null,
   isMover: false,
-  updateEvent(event) {
+  mouseEvent: null,
+  updateEvent (event) {
     moveObj.update(event.layerX, event.layerY);
     event.stopPropagation();
     event.preventDefault();
   },
-  mouseupEvent() {
+  mouseupEvent () {
     main.removeEventListener('mousemove', eventlist.updateEvent);
     document.removeEventListener('mouseup', eventlist.mouseupEvent);
     eventlist.isMover = true;
   },
-  mousedownEvent(event) {
+  mousedownEvent (event) {
+    if (!event.metaKey && !event.ctrlKey) return;
+
     if (event.button === 0) {
       moveObj.init(event.offsetX, event.offsetY);
       main.addEventListener('mousemove', eventlist.updateEvent);
     }
     document.addEventListener('mouseup', eventlist.mouseupEvent);
   },
-  dblclickEvent(event) {
-    clearTimeout(eventlist.click_timer);
+  mouseRecordEvent (event) {
+    eventlist.mouseEvent = event;
+  },
+  keydownEvent (event) {
+    const mouseEvent = eventlist.mouseEvent;
+    if (!mouseEvent || !mouseEvent.target) return;
+    if (mouseEvent.target.id !== 'canvas') return;
+
+    mouseEvent.target.style.cursor = eventlist.dbclickStatus ? "grab" : "zoom-in";
+  },
+  keyupEvent () {
+    canvas.style.cursor = 'unset';
+  },
+  dblclickEvent (event) {
+    if (!event.metaKey && !event.ctrlKey) return;
+    // canvas.style.cursor = 'unset';
     if (!eventlist.dbclickStatus) {
       canvas.style.width = cv_w + 'px';
       canvas.style.height = cv_h + 'px';
@@ -63,9 +79,11 @@ const eventlist = {
       main.removeEventListener('mousedown', eventlist.mousedownEvent);
     }
     eventlist.dbclickStatus = !eventlist.dbclickStatus;
+    canvas.style.cursor = eventlist.dbclickStatus ? "grab" : "zoom-in";
+
   },
-  clickEvent(event) {
-    clearTimeout(eventlist.click_timer);
+  clickEvent (event) {
+    if (event.metaKey || event.ctrlKey) return;
     const { clientWidth, clientHeight } = main;
     const { offsetX, offsetY } = event;
     const c_width = parseInt(getComputedStyle(canvas).width);
@@ -75,16 +93,14 @@ const eventlist = {
     const c_x = c_width >= cv_w ? offsetX : offsetX * cv_w / clientWidth - 5;
     const c_y = c_height >= cv_h ? offsetY : offsetY * cv_h / clientHeight - 5;
 
-    eventlist.click_timer = setTimeout(() => {
-      const dot = ctxAction.draw(Math.floor(c_x / size), Math.floor(c_y / size));
-      socket.dot(dot);
-    }, 0);
+    const dot = ctxAction.draw(Math.floor(c_x / size), Math.floor(c_y / size));
+    socket.dot(dot);
   }
 }
 
 
 // 初始化 颜色操作栏
-function initColors() {
+function initColors () {
   const nodes = ctxAction.colors.map((item, index) => {
     const linode = document.createElement('li');
     linode.dataset.index = index;
@@ -105,7 +121,7 @@ function initColors() {
   document.getElementById('action').append(...nodes);
 }
 
-function initCanvas() {
+function initCanvas () {
   points.forEach(dot => {
     if (Array.isArray(dot) && !Number.isNaN(parseInt(JSON.stringify(dot).replace(/\[|\]|,/g, '')))) {
       ctxAction.draw(...dot);
@@ -113,10 +129,15 @@ function initCanvas() {
   });
 }
 
-; (function init() {
+; (function init () {
   initColors();
   initCanvas();
   main.addEventListener('dblclick', eventlist.dblclickEvent);
+
+  window.addEventListener('mousemove', eventlist.mouseRecordEvent);
+  window.addEventListener('keydown', eventlist.keydownEvent);
+  window.addEventListener('keyup', eventlist.keyupEvent);
+
   canvas.addEventListener('click', eventlist.clickEvent);
 
   // for (let i = 0; i < map.length; i++) {

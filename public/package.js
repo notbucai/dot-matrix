@@ -3,12 +3,13 @@ class Move {
     this.canvas = canvas;
     this.x = 0;
     this.y = 0;
+    this.now = Date.now();
   }
-  init(x, y) {
+  init (x, y) {
     this.x = x;
     this.y = y;
   }
-  update(c_x, c_y) {
+  syncUpdate (c_x, c_y) {
     // 得到开始的位置
     const { x, y } = this;
     // 得到移动后的位置 c_x,c_y
@@ -28,6 +29,13 @@ class Move {
     this.x = c_x;
     this.y = c_y;
   }
+  update (c_x, c_y) {
+    let now = Date.now();
+    if (now - this.now > 60) {
+      this.now = now;
+      this.syncUpdate(c_x, c_y)
+    }
+  }
 }
 
 class Socket {
@@ -37,7 +45,7 @@ class Socket {
 
     this.init();
   }
-  init() {
+  init () {
     const that = this;
     this.socket.on('connect', function () {
       console.log("连接成功", arguments);
@@ -52,7 +60,7 @@ class Socket {
       console.log("连接被断开");
     });
   }
-  dot(dot) {
+  dot (dot) {
     if (Array.isArray(dot) && dot.length === 3) {
       this.socket.emit('dot', dot);
     }
@@ -67,7 +75,7 @@ class CtxAction {
     this.ctx = ctx;
     this.size = size;
   }
-  draw(x, y, color) {
+  draw (x, y, color) {
     const cI = Number.isInteger(parseInt(color)) ? parseInt(color) : this.colorIndex;
     this.ctx.fillStyle = this.colors[cI];
 
