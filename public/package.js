@@ -49,7 +49,7 @@ class Socket {
     });
 
     this.socket.on('disconnect', function () {
-      console.log("连接被断开", data);
+      console.log("连接被断开");
     });
   }
   dot(dot) {
